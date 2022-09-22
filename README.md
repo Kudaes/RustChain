@@ -1,6 +1,6 @@
 # Description
 
-This tool is a simple PoC of how to hide memory artifacts using a ROP chain in combination with hardware breakpoints. The ROP chain will change the main module memory page's protections to N/A while sleeping (i.e. when the function Sleep is called). **x64 only**.
+This tool is a simple PoC of how to hide memory artifacts using a ROP chain in combination with hardware breakpoints. The ROP chain will change the main module memory page's protections to N/A while sleeping (i.e. when the function Sleep is called). For more detailed information about this memory evasion technique check out the original project [Gargoyle](https://github.com/JLospinoso/gargoyle).**x64 only**.
 
 The idea is to set up a hardware breakpoint in kernel32!Sleep and a new top-level filter to handle the exception. When Sleep is called, the exception filter function set before is triggered, allowing us to call the ROP chain without the need of using classic function hooks. This way, we avoid leaving weird and unusual private memory regions in the process related to well known dlls.
 
@@ -9,8 +9,8 @@ The ROP chain simply calls VirtualProtect() to set the current memory page to N/
 The overview of the process is as follows:
 * We use SetUnhandledExceptionFilter to set a new exception filter function.
 * SetThreadContext is used in order to set a hardware breakpoint on kernel32!Sleep.
-* The tool calls Sleep, triggering the hardware breakpoint and driving the execution flow towards our exception filter function.
-* The ROP chain is called, allowing to change the current memory page protection to N/A. Then SleepEx is called. Finally, the ROP chain restores the RX memory protection and the normal execution continues.
+* We call Sleep, triggering the hardware breakpoint and driving the execution flow towards our exception filter function.
+* The ROP chain is called from the exception filter function, allowing to change the current memory page protection to N/A. Then SleepEx is called. Finally, the ROP chain restores the RX memory protection and the normal execution continues.
 
 This process repeats indefinitely.
 
