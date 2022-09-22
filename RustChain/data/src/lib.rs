@@ -397,3 +397,11 @@ pub struct PS_ATTRIBUTE_LIST {
     pub unk8: u32,
 
 }
+
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+pub struct RUNTIME_FUNCTION {
+    pub begin_address: u32,
+    pub end_address: u32,
+    pub unwind_data: u32,
+}
