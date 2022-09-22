@@ -29,16 +29,18 @@ pub extern "Rust" fn start()
     
             let f:data::Sleep;
             let _r: Option<()>;
-            println!("a mimir!");
+            println!("[ZzZ] Sleeping...");
             dinvoke::dynamic_invoke!(k32,&lc!("Sleep"),f,_r,15000);
+            println!("  \\ We are back!");
+            println!("--------------------------");
         }
     }
    
 }
+
 /// This function acts as an Exception Handler, and should be combined with a hardware breakpoint.
 ///
-/// Whenever the HB gets triggered, this function will be executed. This is meant to be used in order
-/// to spoof syscalls parameters.
+/// Whenever the HB gets triggered, this function will be executed. 
 pub unsafe extern "system" fn breakpoint_handler (exceptioninfo: *mut EXCEPTION_POINTERS) -> i32
 {
     if (*(*(exceptioninfo)).exception_record).ExceptionCode.0 == 0x80000004 // STATUS_SINGLE_STEP
@@ -152,7 +154,8 @@ pub unsafe extern "system" fn breakpoint_handler (exceptioninfo: *mut EXCEPTION_
                 let protection = 0x1u32; // PAGE_NOACCESS
                 let old = 0u32;
                 let old_protection: *mut u32 = std::mem::transmute(&old);
-
+                (*(*exceptioninfo).context_record).Rcx = 0; // We replace the original call parameter, avoiding sleeping twice
+                
                 let _exit = PrepareAndRop(
                     address, 
                     page_length, 
@@ -166,9 +169,6 @@ pub unsafe extern "system" fn breakpoint_handler (exceptioninfo: *mut EXCEPTION_
                     gag5_addr as *mut c_void,
                     sleep_addr
                 ); 
-
-                (*(*exceptioninfo).context_record).Rip = start as u64;  
-                    
             }
         }
         return -1; // EXCEPTION_CONTINUE_EXECUTION
