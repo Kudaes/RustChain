@@ -7,7 +7,7 @@ The idea is to set up a hardware breakpoint in kernel32!Sleep and a new top-leve
 The ROP chain simply calls VirtualProtect() to set the current memory page to N/A, then calls SleepEx and finally restores the RX memory protection. 
 
 The overview of the process is as follows:
-* We use SetUnhandledExceptionFilter to set a new exception filter function pointing to a function under our control.
+* We use SetUnhandledExceptionFilter to set a new exception filter function.
 * SetThreadContext is used in order to set a hardware breakpoint on kernel32!Sleep.
 * The tool calls Sleep, triggering the hardware breakpoint and driving the execution flow towards our exception filter function.
 * The ROP chain is called, allowing to change the current memory page protection to N/A. Then SleepEx is called. Finally, the ROP chain restores the RX memory protection and the normal execution continues.
