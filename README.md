@@ -14,6 +14,8 @@ The overview of the process is as follows:
 
 This process repeats indefinitely.
 
+As it can be seen in the image, the main module's memory protection is changed to N/A while sleeping, which avoids memory scans looking for pages with execution permission. 
+
 ![N/A memory protection is set while sleeping](/images/NA.png "N/A memory protection is set while sleeping")
 
 # Compilation 
