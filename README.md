@@ -1,10 +1,18 @@
 # Description
 
-This tool is a simple PoC of how to hide memory artifacts using a ROP chain in combination with hardware breakpoints. The ROP chain will change the memory page's protections to N/A while sleeping (i.e. when the function Sleep is called). **x64 only**.
+This tool is a simple PoC of how to hide memory artifacts using a ROP chain in combination with hardware breakpoints. The ROP chain will change the tool memory page's protections to N/A while sleeping (i.e. when the function Sleep is called). **x64 only**.
 
-The idea is to set up a hardware breakpoint in kernel32!Sleep and a new top-level filter to handle the exception. When Sleep is called, the exception filter function set before takes control, allowing us to call the ROP chain without the need of using classic function hooks. This way, we avoid leaving weird and unusual private memory regions in the process related to well known dlls.
+The idea is to set up a hardware breakpoint in kernel32!Sleep and a new top-level filter to handle the exception. When Sleep is called, the exception filter function set before is triggered, allowing us to call the ROP chain without the need of using classic function hooks. This way, we avoid leaving weird and unusual private memory regions in the process related to well known dlls.
 
-The ROP chain simply calls VirtualProtect() to set the current memory page to N/A, then calls SleepEx and finally restores the RX memory protection. This process repeats indefinitely.
+The ROP chain simply calls VirtualProtect() to set the current memory page to N/A, then calls SleepEx and finally restores the RX memory protection. 
+
+The overview of the process is as follows:
+* We use SetUnhandledExceptionFilter to set a new exception filter function pointing to a function under our control.
+* SetThreadContext is used in order to set a hardware breakpoint on kernel32!Sleep.
+* The tool calls Sleep, triggering the hardware breakpoint and driving the execution flow towards our exception filter function.
+* The ROP chain is called, allowing to change the current memory page protection to N/A. Then SleepEx is called. Finally, the ROP chain restores the RX memory protection and the normal execution continues.
+
+This process repeats indefinitely.
 
 ![N/A memory protection is set while sleeping](/images/NA.png "N/A memory protection is set while sleeping")
 
