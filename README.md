@@ -1,6 +1,6 @@
 # Description
 
-This tool is a simple PoC of how to hide memory artifacts using a ROP chain in combination with hardware breakpoints. The ROP chain will change the tool memory page's protections to N/A while sleeping (i.e. when the function Sleep is called). **x64 only**.
+This tool is a simple PoC of how to hide memory artifacts using a ROP chain in combination with hardware breakpoints. The ROP chain will change the main module memory page's protections to N/A while sleeping (i.e. when the function Sleep is called). **x64 only**.
 
 The idea is to set up a hardware breakpoint in kernel32!Sleep and a new top-level filter to handle the exception. When Sleep is called, the exception filter function set before is triggered, allowing us to call the ROP chain without the need of using classic function hooks. This way, we avoid leaving weird and unusual private memory regions in the process related to well known dlls.
 
