@@ -30,4 +30,4 @@ This tool is just a PoC and some extra features should be implemented in order t
 
 # Credits
 
-* [@thefLinkk](https://twitter.com/thefLinkk) for his [DeepSleep](https://github.com/thefLink/DeepSleep) projec that inspired me to create RustChain.
+* [@thefLinkk](https://twitter.com/thefLinkk) for his [DeepSleep](https://github.com/thefLink/DeepSleep) project that inspired me to create this tool.
