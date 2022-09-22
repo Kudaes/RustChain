@@ -6,7 +6,7 @@ The idea is to set up a hardware breakpoint in kernel32!Sleep and a new top-leve
 
 The ROP chain simply calls VirtualProtect() to set the current memory page to N/A, then calls SleepEx and finally restores the RX memory protection. This process repeats indefinitely.
 
-![N/A memory protection is set while sleeping](/images/NA.png)
+![N/A memory protection is set while sleeping](/images/NA.png "N/A memory protection is set while sleeping")
 
 # Compilation 
 
@@ -23,3 +23,11 @@ After that, simply compile the code and run the tool:
 
 This tool is just a PoC and some extra features should be implemented in order to be fully functional. The main purpose of the project was to learn how to implement a ROP chain and integrate it within Rust. Because of that, this tool will only work if you use it as it is, and failures are expected if you try to use it in other ways (for example, compiling it to a dll and trying to reflectively load and execute it).
 
+# TODO
+
+* Try to fix the callstack while sleeping.
+* Make it functional as PIC.
+
+# Credits
+
+* [@thefLinkk](https://twitter.com/thefLinkk) for his [DeepSleep](https://github.com/thefLink/DeepSleep) projec that inspired me to create RustChain.
