@@ -44,9 +44,12 @@
 
     RustChain ENDP
 
-    PrepareAndRop PROC
+     PrepareAndRop PROC FRAME
         push rbp
+        .pushreg rbp
         mov rbp, rsp
+        .setframe rbp, 0 
+        .endprolog
 
         push rbx
         push rdi
