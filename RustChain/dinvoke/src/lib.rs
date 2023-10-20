@@ -2,7 +2,7 @@
 extern crate litcrypt;
 use_litcrypt!();
 
-use std::ptr;
+use std::{ptr, cell::UnsafeCell};
 use std::ffi::CString;
 use data::{CloseHandle, DLL_PROCESS_ATTACH, EntryPoint, LdrGetProcedureAddress, LoadLibraryA, OpenProcess, PVOID, PeMetadata, GUID, CONTEXT, LptopLevelExceptionFilter};
 use libc::c_void;
@@ -231,12 +231,7 @@ pub fn call_module_entry_point(pe_info: &PeMetadata, module_base_address: isize)
 pub fn get_function_address_by_ordinal(module_base_address: isize, ordinal: u32) -> isize {
 
     let ret = ldr_get_procedure_address(module_base_address, "", ordinal);
-
-    match ret {
-    Ok(r) => return r,
-    Err(_) => return 0, 
-    }
-    
+    ret
 }
 
 /// Retrieves the address of an exported function from the specified module either by its name 
@@ -263,52 +258,45 @@ pub fn get_function_address_by_ordinal(module_base_address: isize, ordinal: u32)
 ///     
 /// }
 /// ```
-pub fn ldr_get_procedure_address (module_handle: isize, function_name: &str, ordinal: u32) -> Result<isize, String> {
+pub fn ldr_get_procedure_address (module_handle: isize, function_name: &str, ordinal: u32) -> isize {
 
     unsafe 
     {   
-        let mut result: isize = 0;
-        
-        let module_base_address = get_module_base_address(&lc!("ntdll.dll")); 
-        if module_base_address != 0
+        let ret: Option<i32>;
+        let func_ptr: data::LdrGetProcedureAddress;
+        let hmodule: PVOID = std::mem::transmute(module_handle);
+        let r = usize::default();
+        let return_address: *mut c_void = std::mem::transmute(&r);
+        let return_address: *mut PVOID = std::mem::transmute(return_address);
+        let f: UnsafeCell<String> = String::default().into();
+        let mut fun_name: *mut String = std::mem::transmute(f.get());
+
+        if function_name == ""
         {
-            let function_address: isize = get_function_address(module_base_address, &lc!("LdrGetProcedureAddress"));
-
-            if function_address != 0 
-            {
-                let hmodule: PVOID = std::mem::transmute(module_handle);
-                let func_ptr: LdrGetProcedureAddress = std::mem::transmute(function_address);  
-                let return_address: *mut c_void = std::mem::transmute(&u64::default());
-                let return_address: *mut PVOID = std::mem::transmute(return_address);
-                let mut fun_name: *mut String = std::mem::transmute(&String::default());
-
-                if function_name == ""
-                {
-                    fun_name = ptr::null_mut();
-                }
-                else 
-                {
-                    *fun_name = function_name.to_string();
-                }
-
-                let ret = func_ptr(hmodule, fun_name, ordinal, return_address);
-
-                if ret == 0
-                {
-                    result = *return_address as isize;
-                }
-            }
-            else 
-            {
-                return Err(lc!("[x] Error obtaining LdrGetProcedureAddress address."));
-            }
+            fun_name = ptr::null_mut();
         }
         else 
         {
-            return Err(lc!("[x] Error obtaining ntdll.dll base address."));
+            *fun_name = function_name.to_string();
         }
 
-        Ok(result)
+        let module_base_address = get_module_base_address(&lc!("ntdll.dll")); 
+        dynamic_invoke!(module_base_address,&lc!("LdrGetProcedureAddress"),func_ptr,ret,hmodule,fun_name,ordinal,return_address);
+
+        match ret {
+            Some(x) => 
+            {
+                if x == 0
+                {
+                    return *return_address as isize;
+                } 
+                else 
+                {
+                    return 0;
+                }
+            },
+            None => return 0,
+        }
     }
 }
 
